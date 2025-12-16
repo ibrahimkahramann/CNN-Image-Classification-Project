@@ -1,64 +1,123 @@
 # CNN ile Özel Görüntü Sınıflandırma Projesi (BLG-407)
 
-Bu proje, BLG-407 Makine Öğrenmesi dersi kapsamında, özel olarak toplanmış bir görüntü veri seti kullanılarak Keras ile üç farklı CNN modeli geliştirmek amacıyla yapılmıştır.
+Bu proje, BLG-407 Makine Öğrenmesi dersi kapsamında, **kendi toplanmış görüntü verisi** ile üç farklı CNN yaklaşımını (Transfer Learning, Temel CNN, Geliştirilmiş CNN) karşılaştırmalı olarak uygular.
 
-Projenin amacı, "çatal" (fork) ve "kaşık" (spoon) sınıflarını ayırt edebilen bir model eğitmek ve farklı mimarilerin (Transfer Learning, Temel CNN, Gelişmiş CNN) performansını karşılaştırmaktır.
+## Proje Yapısı
+- model1_transfer_learning.ipynb — VGG16 ile Transfer Learning (ImageNet ağırlıkları, taban dondurulmuş)
+- model2_basic_cnn.ipynb — Sıfırdan Basit CNN (baseline)
+- model3_advanced_cnn.ipynb — Geliştirilmiş CNN (augmentation + hiperparametre)
+- dataset/
+	- fork/
+	- spoon/
 
-## Proje Bileşenleri
-
-Proje, hocanın isterleri doğrğultusunda 3 ana Jupyter Notebook dosyasından oluşmaktadır:
-
-1.  **`model1.ipynb` (Transfer Learning):** VGG16 gibi state-of-the-art bir mimariyi "Transfer Learning" (ince ayar) ile kullanarak veri setindeki temel başarıyı ölçer.
-2.  **`model2.ipynb` (Temel CNN):** Sıfırdan, basit bir CNN mimarisi tasarlayarak bir "temel model" (baseline) oluşturur.
-3.  **`model3.ipynb` (Gelişmiş CNN):** `model2`'deki mimariyi alır ve `Data Augmentation` ile `Dropout`, `Batch Size`, `Learning Rate` gibi hocanın istediği hiperparametreleri sistematik olarak deneyerek performansı artırmayı hedefler.
-
-## Veri Seti
-
-Veri seti, "çatal" (fork) ve "kaşık" (spoon) olmak üzere 2 sınıftan oluşmaktadır.
-Tüm görüntüler, farklı açı, ışık ve arka plan koşullarında bizzat proje sahibi tarafından telefon kamerasıyla çekilmiştir.
-
-* **Görsel Sayısı:** 100+ (Her sınıf için 50+ adet)
-* **Çözünürlük:** Tüm görüntüler $128\times128$ piksele yeniden boyutlandırılmıştır.
-* **Veri Yapısı:** `dataset/fork/` ve `dataset/spoon/` klasör yapısına uygundur.
-
-## Sonuçlar ve Modellerin Karşılaştırılması
-
-Üç model de aynı veri seti üzerinde eğitilmiş ve "Test (Validation) Doğruluğu" değerleri karşılaştırılmıştır.
-
-| Model | Mimari | Test Doğruluğu | Temel Notlar |
-| :--- | :--- | :--- | :--- |
-| **Model 1** | Transfer Learning (VGG16) | **~%92.00** | **En Başarıı Model.** VGG16'nın hazır bilgisi sayesinde zorlu veri setini kolayca tanıdı. |
-| **Model 2** | Temel CNN (Sıfırdan) | %64.00 | **Temel Model.** `LR=0.0005` ayarına rağmen şiddetli **overfitting** (ezberleme) yaşadı (`image_89947f.png`). |
-| **Model 3** | Gelişmiş CNN (Sıfırdan) | **%84.00** | **Beklenen Sonuç.** `Data Augmentation` ve `Dropout` eklenerek `model2`'deki overfitting çözüldü ve başarı %20 arttı (`image_8994fc.png`). |
-
----
-
-### Sözlü Sunum Analizi
-
-#### 1. Hangi model neden daha iyi sonuç verdi?
-En yüksek doğruluğu (%92) **Model 1 (Transfer Learning)** verdi. Çünkü VGG16, "şekil" ve "kenar" algılama konusunda zaten milyonlarca fotoğraf görmüş bir beyne sahipti (ImageNet) ve bizim "çatal/kaşık" problemimizi (benzer örnekler) kolayca çözdü.
-
-#### 2. Model 3, Model 2'den neden daha iyi oldu?
-**Model 3 (%84), Model 2'den (%64) daha iyi oldu.**
-* **Model 2**, `Data Augmentation` veya `Dropout` olmadan, "ezberlemeye" (overfitting) çok yatkındı. Eğitim doğruluğu %100'e çıkarken, test doğruluğu %64'te kaldı (`image_89947f.png`).
-* **Model 3**, hocanın istediği hiperparametre iyileştirmelerini uygulayarak bu ezberlemeyi **başarıyla engelledi**.
-* `model3`'ün grafikleri (`image_8994fc.png`), modelin artık ezberlemediğini, "genelleme" yaptığını ve öğrendiğini göstermektedir. Bu sayede `model2`'ye göre belirgin bir iyileşme sağlanmıştır.
-
-#### 3. Model 3'te yapılan hiperparametre değişikliklerinin etkisi ne oldu?
-`model3.ipynb` dosyasındaki 10 adımlık deney tablosunda görüldüğü gibi, `model2`'den `model3`'e geçerken birçok parametre denendi. En iyi sonucu (`%84`) veren **Deney 7**'de 4 ana değişiklik yapıldı:
-1.  **`Data Augmentation` (Eklendi):** Ezberlemeyi engellemek için en kritik adımdı.
-2.  **`Dropout (0.2)` (Eklendi):** Modelin tek bir özelliğe aşırı güvenmesini engelledi.
-3.  **`Batch Size (32)` (Artırıldı):** Eğitimi daha stabil hale getirdi.
-4.  **`LR (0.001)` (Değiştirildi):** Bu yeni mimari için en iyi öğrenme hızı bulundu.
-
-Bu dört değişikliğin **kombinasyonu**, `model2`'nin %64'lük overfitting sorununu çözerek `model3`'ü %84'lük başarılı bir modele dönüştürdü.
+## Veri Seti Kuralları (Ödev)
+- En az iki sınıf, her sınıfta **50+** özgün görsel (toplam **100+**).
+- Görseller **öğrenci tarafından çekilmiş** olmalı; internetten hazır dataset kabul edilmez.
+- Çeşitlilik: farklı **açı/ışık/arka plan**.
+- Boyut: **128×128** önerilir. Klasör yapısı:
+	- dataset/
+		- sınıf1/
+		- sınıf2/
 
 ## Kurulum ve Çalıştırma
 
-Proje Google Colab üzerinde geliştirilmiştir.
+### Google Colab (Önerilen)
+1. Repoyu indirin/klonlayın, `dataset/` klasörünü Drive’a yükleyin.
+2. Notebook’u Colab’de açın, ilk hücrede Drive’ı bağlayın.
+3. `PROJECT_PATH` değerini Drive’daki proje yoluna ayarlayın.
+4. Tüm hücreleri sırayla çalıştırın.
 
-1.  Bu repoyu klonlayın veya indirin.
-2.  `dataset/` klasörünü kendi Google Drive'ınıza yükleyin.
-3.  `.ipynb` dosyalarını Google Colab'de açın.
-4.  Notebook içerisindeki `PROJECT_PATH` değişkenini, `dataset` klasörünüzün bulunduğu yola göre güncelleyin.
-5.  Sırasıyla tüm hücreleri çalıştırın.
+### VS Code (Windows) — Yerel Çalıştırma
+1. Drive mount hücresini **yorumlayın/silin**.
+2. `PROJECT_PATH` değerini yerel yolunuza ayarlayın (örnek):
+	 - `PROJECT_PATH = r"C:/Users/<kullanici>/Desktop/vsc/CNN-Image-Classification-Project"`
+3. Gerekli paketleri kurun:
+   
+	 ```powershell
+	 pip install tensorflow matplotlib numpy
+	 ```
+
+## Notebook Akışı ve Beklentiler
+
+### Model 1 — Transfer Learning (VGG16)
+- `VGG16(include_top=False, weights='imagenet', input_shape=(128,128,3))`
+- `base_model.trainable = False` (taban dondurulur)
+- Tepe: `Flatten → Dense(128,relu) → Dropout(0.5) → Dense(1,sigmoid)`
+- Çıktı: Eğitim/Doğrulama **accuracy/loss** grafikleri, **validation accuracy**.
+
+#### Kod Akışı Açıklamaları
+- Drive bağlama ve yol ayarları: Colab/yerel farklarına göre `PROJECT_PATH` düzenlenir.
+- Veri yükleme: `image_dataset_from_directory` ile eğitim/validasyon ayrımı (`validation_split=0.2`).
+- Model kurulumu: VGG16 tabanı dondurulur, üst katmanlar eklenir ve derlenir.
+- Eğitim ve grafikler: accuracy/loss grafikleri çizilir, validation accuracy raporlanır.
+- Hata analizi: Yanlış sınıflamalar görselleştirilir.
+
+### Model 2 — Temel CNN (Baseline)
+- Blok: `Rescaling + 3×(Conv2D/MaxPool) → Flatten → Dense(128) → Dense(1,sigmoid)`
+- `Adam(lr=0.0005)`, `epochs≈30`, `batch_size=16`
+- Çıktı: Grafikler + **validation accuracy**; yanlış örnekler görselleştirilir.
+
+#### Kod Akışı Açıklamaları
+- Ortam hazırlığı: Drive bağlama (Colab) veya yerel yol ayarı.
+- Veri hazırlığı: `cache+prefetch` ile veri boru hattı optimize edilir.
+- Mimari: Rescaling + 3×(Conv+Pool) → Flatten → Dense blokları.
+- Eğitim ve grafikler: 30 epoch; accuracy/loss grafikleri; validation accuracy.
+- Hata analizi: Eşikleme ile yanlış sınıflamalar görselleştirilir.
+
+### Model 3 — Geliştirilmiş CNN
+- **Data augmentation** (RandomFlip/Rotation/Zoom) + `Dropout(0.2)`
+- `Adam(lr=0.001)`, `batch_size=32`, **EarlyStopping(val_accuracy, patience=7)**
+- En az 3 hiperparametreyi değiştirin; deney tablosu ve yorum ekleyin.
+
+#### Kod Akışı Açıklamaları
+- Veri artırımı: `RandomFlip/Rotation/Zoom` ile augmentation bloğu ve `map(...)` kullanımı.
+- Mimari: `Dropout(0.2)`, `Adam(lr=0.001)`; model derleme ve özet.
+- EarlyStopping: `val_accuracy` takibi ve en iyi ağırlıkların geri yüklenmesi.
+- Eğitim ve grafikler: accuracy/loss; final validation accuracy.
+- Hata analizi: Yanlış örneklerin tespiti ve görselleştirme.
+
+## Değerlendirme ve Raporlama
+- Eğitim/Doğrulama **accuracy/loss** grafikleri zorunlu.
+- **Validation accuracy** raporlanır; yanlış sınıflanan örneklerden görseller gösterilir.
+- Model 3 için: Hangi değişikliklerin performansı arttırdığını **tablo** ve **yorum** ile açıklayın.
+
+### Sunum Üst Bilgileri (Notebook Başına)
+- Adınız, Soyadınız, Okul Numaranız, GitHub Repo Bağlantısı başlıkları notebookların en üstünde yer alır.
+- GitHub Repo örnek: https://github.com/kullanici_adi/CNN_siniflandirma
+
+### Ödev Teslim Kuralları (Özet)
+- Teslim: Son 2 hafta yüzyüze kontrol; sonrasında kabul edilmez.
+- Yöntem: Sadece GitHub; e-posta veya manuel teslim kabul edilmez.
+- Kapsam: Tüm öğrenciler sorumlu (dersi önce alanlar dahil).
+- Değerlendirme: Sözlü sunum, kod akışı düzeni, projeye hakimiyet; repo ve `.ipynb` zorunlu.
+
+### Rubrikten Kritik Maddeler
+- Veri seti: Özgün çekimler, 50+ görsel/sınıf, 128×128 önerisi.
+- Model1: Transfer learning/fine-tuning, grafikler ve test doğruluğu.
+- Model2: Basit CNN, grafikler ve test doğruluğu.
+- Model3: ≥3 hiperparametre denemesi, augmentation, performans tablosu ve analiz; Model2’ye göre iyileşme beklenir.
+- Dökümantasyon: README ve notebook markdown açıklamaları açık ve düzenli olmalı.
+
+## Sözlü Sunum İçin İpuçları
+- Hangi model neden daha iyi? Transfer learning’in avantaj/dezavantajları.
+- Overfitting nasıl teşhis edildi ve nasıl azaltıldı (augmentation, dropout)?
+- Hiperparametre değişikliklerinin etkisini grafikler ve tablo ile bağlayın.
+
+## Notlar ve Yaygın Hatalar
+- **Yol hataları:** Yerelde `PROJECT_PATH` güncellenmeli; Colab yolu yerel ortamda çalışmaz.
+- **Bellek hataları:** Doğrulama verisini NumPy’a alırken `BATCH_SIZE` düşürün veya daha az batch analiz edin.
+- **Dosya isimleri:** Notebook adları bu repoda `model1_transfer_learning.ipynb`, `model2_basic_cnn.ipynb`, `model3_advanced_cnn.ipynb` biçimindedir.
+
+## Çalıştırma Komutları (Yerel)
+
+```powershell
+pip install tensorflow matplotlib numpy
+```
+
+Yerelde çalışırken her notebookta Drive mount hücresini yorumlayıp `PROJECT_PATH` değerini aşağıdaki gibi ayarlayın:
+
+```python
+PROJECT_PATH = r"C:/Users/<kullanici>/Desktop/vsc/CNN-Image-Classification-Project"
+```
+
+Bu README, ödev izlencesine uygun çalıştırma ve raporlama akışını özetler; notebook’larda eklenen Markdown bölümleri detaylı yönergeler sunar.
